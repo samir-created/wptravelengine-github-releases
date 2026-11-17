@@ -9,6 +9,7 @@ class Plugin {
 	public static function boot(): void {
 		self::register_autoloader();
 		self::register_rest_routes();
+		RemoteController::boot();
 
 		if ( ! is_admin() ) {
 			return;

@@ -21,6 +21,7 @@ const state = {
 	issues          : [],        // current issue search results
 	issueSearch     : '',        // last issue query
 	autoInstall     : !! WPTEDZGithub.auto_install,
+	remote          : !! WPTEDZGithub.remote,
 };
 
 var searchTimer;
@@ -1611,6 +1612,19 @@ function issuesWelcomeHtml() {
 		'<code class="gh-issues-welcome__hint-code" id="gh-webhook-url-hint"></code>',
 		'<button class="gh-hint-copy-btn" id="gh-webhook-url-copy" title="Copy URL">⧉</button>',
 		'</div>',
+		// Remote access for the QA hub: install releases by tag over an Application Password.
+		'<div class="gh-issues-welcome__hint gh-issues-welcome__hint--auto-install">',
+		'<span class="gh-issues-welcome__hint-label">Remote access (QA hub)</span>',
+		'<button class="gh-auto-install-toggle' + ( state.remote ? ' is-on' : '' ) + '" id="gh-remote-toggle" role="switch" aria-checked="' + ( state.remote ? 'true' : 'false' ) + '"' + ( WPTEDZGithub.remote_allowed ? '' : ' disabled title="Only on local, development or staging sites"' ) + '>',
+		'<span class="gh-toggle-track"><span class="gh-toggle-thumb"></span></span>',
+		'<span class="gh-toggle-text">' + ( WPTEDZGithub.remote_allowed ? ( state.remote ? 'Enabled' : 'Disabled' ) : 'Not on ' + WPTEDZGithub.environment ) + '</span>',
+		'</button>',
+		'</div>',
+		'<div class="gh-issues-welcome__hint gh-issues-welcome__hint--webhook gh-issues-welcome__hint--remote"' + ( state.remote ? '' : ' style="display:none"' ) + '>',
+		'<span class="gh-issues-welcome__hint-label">Remote API base · Application Password</span>',
+		'<code class="gh-issues-welcome__hint-code" id="gh-remote-url-hint"></code>',
+		'<button class="gh-hint-copy-btn" id="gh-remote-url-copy" title="Copy URL">⧉</button>',
+		'</div>',
 		'<div class="gh-issues-welcome__hint">',
 		'<span class="gh-issues-welcome__hint-label">Issue URL</span>',
 		'<code class="gh-issues-welcome__hint-code">https://github.com/org/repo/issues/123</code>',
@@ -1666,6 +1680,44 @@ function bindIssuesWelcome( container ) {
 					if ( textEl ) textEl.textContent = ! nowOn ? 'Enabled' : 'Disabled';
 					if ( webhookHint ) webhookHint.style.display = ! nowOn ? '' : 'none';
 					setStatus( 'Failed to save auto-install setting.', 'error' );
+				}
+			} );
+		} );
+	}
+
+	var remoteUrl  = WPTEDZGithub.remote_url || '';
+	var remoteHint = container.querySelector( '.gh-issues-welcome__hint--remote' );
+	var remoteEl   = container.querySelector( '#gh-remote-url-hint' );
+	if ( remoteEl ) remoteEl.textContent = remoteUrl;
+
+	var remoteCopy = container.querySelector( '#gh-remote-url-copy' );
+	if ( remoteCopy && remoteUrl ) {
+		remoteCopy.addEventListener( 'click', function() {
+			copyToClipboard( remoteUrl, remoteCopy );
+		} );
+	}
+
+	var remoteBtn = container.querySelector( '#gh-remote-toggle' );
+	if ( remoteBtn && ! remoteBtn.disabled ) {
+		var setRemote = function( on ) {
+			var textEl = remoteBtn.querySelector( '.gh-toggle-text' );
+			remoteBtn.setAttribute( 'aria-checked', on ? 'true' : 'false' );
+			remoteBtn.classList.toggle( 'is-on', on );
+			if ( textEl ) textEl.textContent = on ? 'Enabled' : 'Disabled';
+			if ( remoteHint ) remoteHint.style.display = on ? '' : 'none';
+			state.remote = on;
+		};
+
+		remoteBtn.addEventListener( 'click', function() {
+			var nowOn = remoteBtn.getAttribute( 'aria-checked' ) !== 'true';
+			setRemote( nowOn );
+
+			post( 'wpte_dz_gh_set_remote', { enabled: nowOn ? '1' : '0' } ).then( function( res ) {
+				if ( res && res.success ) {
+					setStatus( nowOn ? 'Remote access enabled.' : 'Remote access disabled.', 'success' );
+				} else {
+					setRemote( ! nowOn ); // revert the optimistic update
+					setStatus( ( res && res.data && res.data.message ) || 'Failed to save remote access setting.', 'error' );
 				}
 			} );
 		} );

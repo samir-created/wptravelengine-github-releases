@@ -340,7 +340,7 @@ class GithubRestController {
 	/**
 	 * Append one download record to the persistent log (capped at MAX_LOG_SIZE).
 	 */
-	private static function log_download( array $issue_summary, array $install_entry ): void {
+	public static function log_download( array $issue_summary, array $install_entry ): void {
 		$log   = get_option( WPTE_DZ_GITHUB_OPTION_DOWNLOAD_LOG, [] );
 		$log[] = [
 			'timestamp'   => time(),
@@ -364,7 +364,7 @@ class GithubRestController {
 		update_option( WPTE_DZ_GITHUB_OPTION_LAST_DL_TS, time(), false );
 	}
 
-	private static function log_error( array $issue_summary, array $error_entry ): void {
+	public static function log_error( array $issue_summary, array $error_entry ): void {
 		$log   = get_option( WPTE_DZ_GITHUB_OPTION_DOWNLOAD_LOG, [] );
 		$log[] = [
 			'timestamp' => time(),
