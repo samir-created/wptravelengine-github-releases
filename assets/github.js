@@ -1533,9 +1533,14 @@ function bindDownloadBanner( container ) {
 
 // ---- Utilities ----
 function copyToClipboard( text, btn ) {
+	var label = btn.querySelector( '.gh-copy-btn__label' );
 	var flash = function() {
-		btn.textContent = '✓';
-		setTimeout( function() { btn.textContent = '⧉'; }, 1500 );
+		btn.classList.add( 'is-copied' );
+		if ( label ) label.textContent = 'Copied';
+		setTimeout( function() {
+			btn.classList.remove( 'is-copied' );
+			if ( label ) label.textContent = 'Copy';
+		}, 1500 );
 	};
 	if ( navigator.clipboard && navigator.clipboard.writeText ) {
 		navigator.clipboard.writeText( text ).then( flash );
@@ -1587,6 +1592,41 @@ function issuesSkeletonHtml() {
 		+ '</div>';
 }
 
+var INFO_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/></svg>';
+var COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>';
+
+/**
+ * One automation setting: title + one-line description + switch, and — while it is on — the
+ * URL to give the other side, shown in full in a read-only field with a Copy button.
+ * Every string passed in is hardcoded here; the URL value is set later via input.value.
+ */
+function settingHtml( o ) {
+	var on = !! o.on && ! o.disabled;
+	return [
+		'<div class="gh-setting" data-setting="' + o.id + '">',
+		'<div class="gh-setting__head">',
+		'<div class="gh-setting__text">',
+		'<span class="gh-setting__title" id="gh-' + o.id + '-title">' + o.title + '</span>',
+		'<span class="gh-setting__desc">' + o.desc + '</span>',
+		'</div>',
+		'<button type="button" class="gh-auto-install-toggle' + ( on ? ' is-on' : '' ) + '" id="gh-' + o.id + '-toggle" role="switch" aria-checked="' + ( on ? 'true' : 'false' ) + '" aria-labelledby="gh-' + o.id + '-title"' + ( o.disabled ? ' disabled' : '' ) + '>',
+		'<span class="gh-toggle-track"><span class="gh-toggle-thumb"></span></span>',
+		'<span class="gh-toggle-text">' + ( on ? 'On' : 'Off' ) + '</span>',
+		'</button>',
+		'</div>',
+		o.disabled ? '<div class="gh-setting__notice" role="note">' + INFO_ICON + '<p>' + o.disabledNote + '</p></div>' : '',
+		'<div class="gh-setting__url"' + ( on ? '' : ' hidden' ) + '>',
+		'<label class="gh-setting__url-label" for="gh-' + o.id + '-url">' + o.urlLabel + '</label>',
+		'<div class="gh-copy-field">',
+		'<input type="text" class="gh-copy-field__input" id="gh-' + o.id + '-url" readonly spellcheck="false">',
+		'<button type="button" class="gh-copy-btn" aria-label="Copy ' + o.urlLabel + '">' + COPY_ICON + '<span class="gh-copy-btn__label">Copy</span></button>',
+		'</div>',
+		o.urlHelp ? '<p class="gh-setting__help">' + o.urlHelp + '</p>' : '',
+		'</div>',
+		'</div>',
+	].join( '' );
+}
+
 function issuesWelcomeHtml() {
 	return [
 		'<div class="gh-issues-welcome">',
@@ -1600,129 +1640,84 @@ function issuesWelcomeHtml() {
 		'</div>',
 		'<h3 class="gh-issues-welcome__title">Find a GitHub Issue</h3>',
 		'<p class="gh-issues-welcome__desc">Paste an issue URL or search by keyword to load the issue along with its linked pull requests and release tags.</p>',
-		'<div class="gh-issues-welcome__hints">',
-		'<div class="gh-issues-welcome__hint gh-issues-welcome__hint--auto-install">',
-		'<span class="gh-issues-welcome__hint-label">Auto-install on webhook</span>',
-		'<button class="gh-auto-install-toggle' + ( state.autoInstall ? ' is-on' : '' ) + '" id="gh-auto-install-toggle" role="switch" aria-checked="' + ( state.autoInstall ? 'true' : 'false' ) + '">',
-		'<span class="gh-toggle-track"><span class="gh-toggle-thumb"></span></span>',
-		'<span class="gh-toggle-text">' + ( state.autoInstall ? 'Enabled' : 'Disabled' ) + '</span>',
-		'</button>',
-		'</div>',
-		'<div class="gh-issues-welcome__hint gh-issues-welcome__hint--webhook"' + ( state.autoInstall ? '' : ' style="display:none"' ) + '>',
-		'<span class="gh-issues-welcome__hint-label">Webhook Payload URL</span>',
-		'<code class="gh-issues-welcome__hint-code" id="gh-webhook-url-hint"></code>',
-		'<button class="gh-hint-copy-btn" id="gh-webhook-url-copy" title="Copy URL">⧉</button>',
-		'</div>',
-		// Remote access for the QA hub: install releases by tag over an Application Password.
-		'<div class="gh-issues-welcome__hint gh-issues-welcome__hint--auto-install">',
-		'<span class="gh-issues-welcome__hint-label">Remote access (QA hub)</span>',
-		'<button class="gh-auto-install-toggle' + ( state.remote ? ' is-on' : '' ) + '" id="gh-remote-toggle" role="switch" aria-checked="' + ( state.remote ? 'true' : 'false' ) + '"' + ( WPTEDZGithub.remote_allowed ? '' : ' disabled title="Only on local, development, staging or non-production sites"' ) + '>',
-		'<span class="gh-toggle-track"><span class="gh-toggle-thumb"></span></span>',
-		'<span class="gh-toggle-text">' + ( WPTEDZGithub.remote_allowed ? ( state.remote ? 'Enabled' : 'Disabled' ) : 'Not on ' + WPTEDZGithub.environment ) + '</span>',
-		'</button>',
-		'</div>',
-		'<div class="gh-issues-welcome__hint gh-issues-welcome__hint--webhook gh-issues-welcome__hint--remote"' + ( state.remote ? '' : ' style="display:none"' ) + '>',
-		'<span class="gh-issues-welcome__hint-label">Remote API base · Application Password</span>',
-		'<code class="gh-issues-welcome__hint-code" id="gh-remote-url-hint"></code>',
-		'<button class="gh-hint-copy-btn" id="gh-remote-url-copy" title="Copy URL">⧉</button>',
-		'</div>',
-		'<div class="gh-issues-welcome__hint">',
-		'<span class="gh-issues-welcome__hint-label">Issue URL</span>',
-		'<code class="gh-issues-welcome__hint-code">https://github.com/org/repo/issues/123</code>',
-		'</div>',
-		'<div class="gh-issues-welcome__hint">',
-		'<span class="gh-issues-welcome__hint-label">Project URL</span>',
-		'<code class="gh-issues-welcome__hint-code">https://github.com/orgs/org/projects/78/views/1?...&issue=org|repo|123</code>',
-		'</div>',
-		'<div class="gh-issues-welcome__hint">',
-		'<span class="gh-issues-welcome__hint-label">Issue Title</span>',
-		'<code class="gh-issues-welcome__hint-code">booking form validation</code>',
-		'</div>',
+		'<div class="gh-search-help">',
+		'<p class="gh-search-help__title">Paste either link</p>',
+		'<ul class="gh-search-help__list">',
+		'<li><span class="gh-search-help__label">Issue URL</span><code>github.com/org/repo/issues/123</code></li>',
+		'<li><span class="gh-search-help__label">Project board item</span><code title="github.com/orgs/org/projects/78/views/1?…&amp;issue=org|repo|123">github.com/orgs/org/projects/78/…</code></li>',
+		'</ul>',
 		'</div>',
 		'<p class="gh-issues-welcome__tip"><kbd>Enter</kbd> to search immediately &middot; waits 2s otherwise</p>',
 		'</div>',
+		'<section class="gh-automation" aria-labelledby="gh-automation-title">',
+		'<h3 class="gh-automation__title" id="gh-automation-title">Automation</h3>',
+		settingHtml( {
+			id: 'auto-install', on: state.autoInstall,
+			title: 'Auto-install on webhook',
+			desc: 'Installs the release of a linked pull request when its issue moves to Testing or Push Zips on a GitHub project board.',
+			urlLabel: 'Webhook payload URL',
+			urlHelp: 'Add it in GitHub as a webhook for the “Projects v2 item” event, content type application/json.',
+		} ),
+		settingHtml( {
+			id: 'remote', on: state.remote, disabled: ! WPTEDZGithub.remote_allowed,
+			title: 'Remote access (QA hub)',
+			desc: 'Lets the WTE Hub check this site, install a release by tag and open a test browser, using an administrator’s Application Password.',
+			disabledNote: '<strong>Not available on this site.</strong> Its environment type is <code>' + esc( WPTEDZGithub.environment || 'production' ) + '</code>. Set <code>WP_ENVIRONMENT_TYPE</code> to <code>local</code>, <code>development</code>, <code>staging</code> or <code>non-production</code> in wp-config.php to use it.',
+			urlLabel: 'Remote API base URL',
+			urlHelp: 'Give the hub this site’s address plus a user and Application Password (Users → Profile → Application Passwords).',
+		} ),
+		'</section>',
 	].join( '' );
 }
 
+/** Wires one setting: its switch (optimistic, reverted on failure) and its URL field + Copy. */
+function bindSetting( container, id, url, action, stateKey, labels ) {
+	var root = container.querySelector( '[data-setting="' + id + '"]' );
+	if ( ! root ) return;
+	var btn    = root.querySelector( '.gh-auto-install-toggle' );
+	var urlBox = root.querySelector( '.gh-setting__url' );
+	var input  = root.querySelector( '.gh-copy-field__input' );
+	var copy   = root.querySelector( '.gh-copy-btn' );
+
+	if ( input ) {
+		input.value = url;
+		input.addEventListener( 'focus', function() { input.select(); } );
+	}
+	if ( copy && url ) {
+		copy.addEventListener( 'click', function() { copyToClipboard( url, copy ); } );
+	}
+	if ( ! btn || btn.disabled ) return;
+
+	var set = function( on ) {
+		var text = btn.querySelector( '.gh-toggle-text' );
+		btn.setAttribute( 'aria-checked', on ? 'true' : 'false' );
+		btn.classList.toggle( 'is-on', on );
+		if ( text ) text.textContent = on ? 'On' : 'Off';
+		if ( urlBox ) urlBox.hidden = ! on;
+		state[ stateKey ] = on;
+	};
+
+	btn.addEventListener( 'click', function() {
+		var nowOn = btn.getAttribute( 'aria-checked' ) !== 'true';
+		set( nowOn );
+		post( action, { enabled: nowOn ? '1' : '0' } ).then( function( res ) {
+			if ( res && res.success ) {
+				setStatus( nowOn ? labels.on : labels.off, 'success' );
+			} else {
+				set( ! nowOn ); // revert the optimistic update
+				setStatus( ( res && res.data && res.data.message ) || labels.fail, 'error' );
+			}
+		} );
+	} );
+}
+
 function bindIssuesWelcome( container ) {
-	var url = WPTEDZGithub.webhook_url || '';
-	var el  = container.querySelector( '#gh-webhook-url-hint' );
-	if ( el ) el.textContent = url;
-
-	var copyBtn = container.querySelector( '#gh-webhook-url-copy' );
-	if ( copyBtn && url ) {
-		copyBtn.addEventListener( 'click', function() {
-			copyToClipboard( url, copyBtn );
-		} );
-	}
-
-	var webhookHint = container.querySelector( '.gh-issues-welcome__hint--webhook' );
-
-	var toggleBtn = container.querySelector( '#gh-auto-install-toggle' );
-	if ( toggleBtn ) {
-		toggleBtn.addEventListener( 'click', function() {
-			var nowOn  = toggleBtn.getAttribute( 'aria-checked' ) !== 'true';
-			var textEl = toggleBtn.querySelector( '.gh-toggle-text' );
-
-			toggleBtn.setAttribute( 'aria-checked', nowOn ? 'true' : 'false' );
-			toggleBtn.classList.toggle( 'is-on', nowOn );
-			if ( textEl ) textEl.textContent = nowOn ? 'Enabled' : 'Disabled';
-			if ( webhookHint ) webhookHint.style.display = nowOn ? '' : 'none';
-			state.autoInstall = nowOn;
-
-			post( 'wpte_dz_gh_set_auto_install', { enabled: nowOn ? '1' : '0' } ).then( function( res ) {
-				if ( res && res.success ) {
-					setStatus( nowOn ? 'Webhook auto-install enabled.' : 'Webhook auto-install disabled.', 'success' );
-				} else {
-					// Revert optimistic update.
-					state.autoInstall = ! nowOn;
-					toggleBtn.setAttribute( 'aria-checked', ! nowOn ? 'true' : 'false' );
-					toggleBtn.classList.toggle( 'is-on', ! nowOn );
-					if ( textEl ) textEl.textContent = ! nowOn ? 'Enabled' : 'Disabled';
-					if ( webhookHint ) webhookHint.style.display = ! nowOn ? '' : 'none';
-					setStatus( 'Failed to save auto-install setting.', 'error' );
-				}
-			} );
-		} );
-	}
-
-	var remoteUrl  = WPTEDZGithub.remote_url || '';
-	var remoteHint = container.querySelector( '.gh-issues-welcome__hint--remote' );
-	var remoteEl   = container.querySelector( '#gh-remote-url-hint' );
-	if ( remoteEl ) remoteEl.textContent = remoteUrl;
-
-	var remoteCopy = container.querySelector( '#gh-remote-url-copy' );
-	if ( remoteCopy && remoteUrl ) {
-		remoteCopy.addEventListener( 'click', function() {
-			copyToClipboard( remoteUrl, remoteCopy );
-		} );
-	}
-
-	var remoteBtn = container.querySelector( '#gh-remote-toggle' );
-	if ( remoteBtn && ! remoteBtn.disabled ) {
-		var setRemote = function( on ) {
-			var textEl = remoteBtn.querySelector( '.gh-toggle-text' );
-			remoteBtn.setAttribute( 'aria-checked', on ? 'true' : 'false' );
-			remoteBtn.classList.toggle( 'is-on', on );
-			if ( textEl ) textEl.textContent = on ? 'Enabled' : 'Disabled';
-			if ( remoteHint ) remoteHint.style.display = on ? '' : 'none';
-			state.remote = on;
-		};
-
-		remoteBtn.addEventListener( 'click', function() {
-			var nowOn = remoteBtn.getAttribute( 'aria-checked' ) !== 'true';
-			setRemote( nowOn );
-
-			post( 'wpte_dz_gh_set_remote', { enabled: nowOn ? '1' : '0' } ).then( function( res ) {
-				if ( res && res.success ) {
-					setStatus( nowOn ? 'Remote access enabled.' : 'Remote access disabled.', 'success' );
-				} else {
-					setRemote( ! nowOn ); // revert the optimistic update
-					setStatus( ( res && res.data && res.data.message ) || 'Failed to save remote access setting.', 'error' );
-				}
-			} );
-		} );
-	}
+	bindSetting( container, 'auto-install', WPTEDZGithub.webhook_url || '', 'wpte_dz_gh_set_auto_install', 'autoInstall', {
+		on: 'Webhook auto-install enabled.', off: 'Webhook auto-install disabled.', fail: 'Failed to save auto-install setting.',
+	} );
+	bindSetting( container, 'remote', WPTEDZGithub.remote_url || '', 'wpte_dz_gh_set_remote', 'remote', {
+		on: 'Remote access enabled.', off: 'Remote access disabled.', fail: 'Failed to save remote access setting.',
+	} );
 }
 
 function emptyStateHtml( msg ) {
