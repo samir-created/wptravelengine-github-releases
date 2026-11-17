@@ -123,6 +123,12 @@ class GithubInstaller {
 		$plugin_dir   = WP_PLUGIN_DIR . '/' . $final_slug;
 		$was_existing = is_dir( $plugin_dir );
 
+		// A git clone holds .git and uncommitted work; replacing it would delete both.
+		if ( $was_existing && is_dir( ( realpath( $plugin_dir ) ?: $plugin_dir ) . '/.git' ) ) {
+			self::rmdir_recursive( $stage_dir );
+			return new \WP_Error( 'git_clone', "{$final_slug} is a git clone on this site; it was not replaced." );
+		}
+
 		if ( $was_existing ) {
 			self::rmdir_recursive( $plugin_dir );
 		}
