@@ -157,16 +157,7 @@ class GithubRestController {
 		// Build trusted owner allowlist: stored user login + their org logins.
 		// Only repos whose owner is in this set are installed — prevents a
 		// compromised webhook secret from installing repos outside the account.
-		$trusted_owners = [];
-		if ( ! empty( $stored_user['login'] ) ) {
-			$trusted_owners[] = strtolower( $stored_user['login'] );
-		}
-		$orgs = GithubApi::get_user_orgs();
-		if ( ! is_wp_error( $orgs ) ) {
-			foreach ( $orgs as $org ) {
-				$trusted_owners[] = strtolower( $org );
-			}
-		}
+		$trusted_owners = GithubApi::trusted_owners();
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
