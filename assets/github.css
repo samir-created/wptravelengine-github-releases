@@ -1998,6 +1998,17 @@
 #wpte-dz-github-root .gh-setting__help {
 	margin:         8px 0 0;
 }
+#wpte-dz-github-root .gh-setting__help a {
+	display:        block; /* the link sits on its own line under the sentence */
+	width:          fit-content;
+	margin-top:     4px;
+	color:          var(--dbg-accent);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+#wpte-dz-github-root .gh-setting__help a:hover {
+	color:          var(--dbg-accent-dark);
+}
 
 /* Why a setting is unavailable here, and how to change that. */
 #wpte-dz-github-root .gh-setting__notice {

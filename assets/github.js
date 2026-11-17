@@ -1664,7 +1664,7 @@ function issuesWelcomeHtml() {
 			desc: 'Lets the WTE Hub check this site, install a release by tag and open a test browser, using an administrator’s Application Password.',
 			disabledNote: '<strong>Not available on this site.</strong> Its environment type is <code>' + esc( WPTEDZGithub.environment || 'production' ) + '</code>. Set <code>WP_ENVIRONMENT_TYPE</code> to <code>local</code>, <code>development</code>, <code>staging</code> or <code>non-production</code> in wp-config.php to use it.',
 			urlLabel: 'Remote API base URL',
-			urlHelp: 'Give the hub this site’s address plus a user and Application Password (Users → Profile → Application Passwords).',
+			urlHelp: 'Add this URL in the hub with an administrator and an Application Password. <a href="' + esc( ( WPTEDZGithub.admin_url || '' ) + 'profile.php#application-passwords-section' ) + '" target="_blank" rel="noopener noreferrer">Create an Application Password</a>',
 		} ),
 		'</section>',
 	].join( '' );
