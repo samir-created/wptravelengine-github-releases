@@ -1616,7 +1616,7 @@ function issuesWelcomeHtml() {
 		// Remote access for the QA hub: install releases by tag over an Application Password.
 		'<div class="gh-issues-welcome__hint gh-issues-welcome__hint--auto-install">',
 		'<span class="gh-issues-welcome__hint-label">Remote access (QA hub)</span>',
-		'<button class="gh-auto-install-toggle' + ( state.remote ? ' is-on' : '' ) + '" id="gh-remote-toggle" role="switch" aria-checked="' + ( state.remote ? 'true' : 'false' ) + '"' + ( WPTEDZGithub.remote_allowed ? '' : ' disabled title="Only on local, development or staging sites"' ) + '>',
+		'<button class="gh-auto-install-toggle' + ( state.remote ? ' is-on' : '' ) + '" id="gh-remote-toggle" role="switch" aria-checked="' + ( state.remote ? 'true' : 'false' ) + '"' + ( WPTEDZGithub.remote_allowed ? '' : ' disabled title="Only on local, development, staging or non-production sites"' ) + '>',
 		'<span class="gh-toggle-track"><span class="gh-toggle-thumb"></span></span>',
 		'<span class="gh-toggle-text">' + ( WPTEDZGithub.remote_allowed ? ( state.remote ? 'Enabled' : 'Disabled' ) : 'Not on ' + WPTEDZGithub.environment ) + '</span>',
 		'</button>',

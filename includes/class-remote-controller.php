@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Authenticated with a WordPress Application Password (Basic auth) of a user who can
  * manage options. Registered only when the "Remote access" toggle is on and the site's
- * environment type is local, development or staging — never on production.
+ * environment type is local, development, staging or non-production — never on production.
  */
 class RemoteController {
 
@@ -18,10 +18,23 @@ class RemoteController {
 	private const LOGIN_PARAM    = 'wpte_dz_login';
 	private const LOGIN_TTL      = 5 * MINUTE_IN_SECONDS;
 	private const LOGIN_PREFIX   = 'wpte_dz_gh_login_';
-	private const ALLOWED_ENVS   = [ 'local', 'development', 'staging' ];
+	private const ALLOWED_ENVS   = [ 'local', 'development', 'staging', 'non-production' ];
+
+	/**
+	 * The environment type as configured. wp_get_environment_type() turns any value outside
+	 * WordPress's four (such as 'non-production') into 'production', so the raw setting is read
+	 * first — the constant over the environment variable, as WordPress does.
+	 */
+	public static function environment(): string {
+		if ( defined( 'WP_ENVIRONMENT_TYPE' ) && is_string( WP_ENVIRONMENT_TYPE ) && '' !== WP_ENVIRONMENT_TYPE ) {
+			return WP_ENVIRONMENT_TYPE;
+		}
+		$env = getenv( 'WP_ENVIRONMENT_TYPE' );
+		return is_string( $env ) && '' !== $env ? $env : wp_get_environment_type();
+	}
 
 	public static function environment_allowed(): bool {
-		return in_array( wp_get_environment_type(), self::ALLOWED_ENVS, true );
+		return in_array( self::environment(), self::ALLOWED_ENVS, true );
 	}
 
 	public static function enabled(): bool {
@@ -92,7 +105,7 @@ class RemoteController {
 		return new \WP_REST_Response( [
 			'wp'          => get_bloginfo( 'version' ),
 			'php'         => PHP_VERSION,
-			'environment' => wp_get_environment_type(),
+			'environment' => self::environment(),
 			'github_user' => $user['login'] ?? '',
 			'has_token'   => (bool) get_option( WPTE_DZ_GITHUB_OPTION_TOKEN, '' ),
 			'plugins'     => $plugins,

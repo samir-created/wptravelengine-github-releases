@@ -83,7 +83,7 @@ class GithubTool extends AbstractTool {
 			'auto_install'     => get_option( WPTE_DZ_GITHUB_OPTION_AUTO_INSTALL, 'no' ) === 'yes',
 			'remote'           => get_option( WPTE_DZ_GITHUB_OPTION_REMOTE, 'no' ) === 'yes',
 			'remote_allowed'   => RemoteController::environment_allowed(),
-			'environment'      => wp_get_environment_type(),
+			'environment'      => RemoteController::environment(),
 			'remote_url'       => get_rest_url( null, 'github/v1/remote/' ),
 			'favorites'        => array_values( (array) get_option( WPTE_DZ_GITHUB_OPTION_FAVORITES, [] ) ),
 			'last_installed'   => (object) get_option( WPTE_DZ_GITHUB_OPTION_LAST_INSTALLED, [] ),
@@ -427,7 +427,7 @@ class GithubTool extends AbstractTool {
 
 		$enabled = ! empty( $_POST['enabled'] ) && '0' !== $_POST['enabled'];
 		if ( $enabled && ! RemoteController::environment_allowed() ) {
-			wp_send_json_error( [ 'message' => 'Remote access only runs on local, development or staging sites (WP_ENVIRONMENT_TYPE).' ] );
+			wp_send_json_error( [ 'message' => 'Remote access only runs on local, development, staging or non-production sites (WP_ENVIRONMENT_TYPE).' ] );
 		}
 		update_option( WPTE_DZ_GITHUB_OPTION_REMOTE, $enabled ? 'yes' : 'no' );
 		wp_send_json_success( [ 'remote' => $enabled ] );
