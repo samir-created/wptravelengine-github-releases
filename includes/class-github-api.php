@@ -131,6 +131,24 @@ class GithubApi {
 	}
 
 	/**
+	 * Owners whose repos may be installed without a person in wp-admin: the stored
+	 * user's login plus their orgs, lowercased. Empty when no user is stored.
+	 *
+	 * @return string[]
+	 */
+	public static function trusted_owners(): array {
+		$user   = get_option( 'wpte_dz_github_user', [] );
+		$owners = ! empty( $user['login'] ) ? [ strtolower( $user['login'] ) ] : [];
+		$orgs   = self::get_user_orgs();
+		if ( ! is_wp_error( $orgs ) ) {
+			foreach ( $orgs as $org ) {
+				$owners[] = strtolower( $org );
+			}
+		}
+		return $owners;
+	}
+
+	/**
 	 * Return the login names of all orgs the authenticated user belongs to.
 	 * Result is cached in a transient for 1 hour.
 	 *

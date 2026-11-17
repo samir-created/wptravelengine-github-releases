@@ -81,6 +81,10 @@ class GithubTool extends AbstractTool {
 			'last_download_ts' => (int) get_option( WPTE_DZ_GITHUB_OPTION_LAST_DL_TS, 0 ),
 			'webhook_url'      => get_rest_url( null, 'github/v1/webhook' ),
 			'auto_install'     => get_option( WPTE_DZ_GITHUB_OPTION_AUTO_INSTALL, 'no' ) === 'yes',
+			'remote'           => get_option( WPTE_DZ_GITHUB_OPTION_REMOTE, 'no' ) === 'yes',
+			'remote_allowed'   => RemoteController::environment_allowed(),
+			'environment'      => wp_get_environment_type(),
+			'remote_url'       => get_rest_url( null, 'github/v1/remote/' ),
 			'favorites'        => array_values( (array) get_option( WPTE_DZ_GITHUB_OPTION_FAVORITES, [] ) ),
 			'last_installed'   => (object) get_option( WPTE_DZ_GITHUB_OPTION_LAST_INSTALLED, [] ),
 		] );
@@ -104,6 +108,7 @@ class GithubTool extends AbstractTool {
 		add_action( 'wp_ajax_wpte_dz_gh_get_issue_by_url',  [ $this, 'ajax_get_issue_by_url' ] );
 		add_action( 'wp_ajax_wpte_dz_gh_get_download_log',  [ $this, 'ajax_get_download_log' ] );
 		add_action( 'wp_ajax_wpte_dz_gh_set_auto_install',  [ $this, 'ajax_set_auto_install' ] );
+		add_action( 'wp_ajax_wpte_dz_gh_set_remote',        [ $this, 'ajax_set_remote' ] );
 		add_action( 'wp_ajax_wpte_dz_gh_clear_log',         [ $this, 'ajax_clear_log' ] );
 		add_action( 'wp_ajax_wpte_dz_gh_get_favorites',     [ $this, 'ajax_get_favorites' ] );
 		add_action( 'wp_ajax_wpte_dz_gh_save_favorites',    [ $this, 'ajax_save_favorites' ] );
@@ -415,6 +420,17 @@ class GithubTool extends AbstractTool {
 		$enabled = ! empty( $_POST['enabled'] ) && '0' !== $_POST['enabled'];
 		update_option( WPTE_DZ_GITHUB_OPTION_AUTO_INSTALL, $enabled ? 'yes' : 'no' );
 		wp_send_json_success( [ 'auto_install' => $enabled ] );
+	}
+
+	public function ajax_set_remote(): void {
+		Admin::verify_request();
+
+		$enabled = ! empty( $_POST['enabled'] ) && '0' !== $_POST['enabled'];
+		if ( $enabled && ! RemoteController::environment_allowed() ) {
+			wp_send_json_error( [ 'message' => 'Remote access only runs on local, development or staging sites (WP_ENVIRONMENT_TYPE).' ] );
+		}
+		update_option( WPTE_DZ_GITHUB_OPTION_REMOTE, $enabled ? 'yes' : 'no' );
+		wp_send_json_success( [ 'remote' => $enabled ] );
 	}
 
 	public function ajax_get_favorites(): void {

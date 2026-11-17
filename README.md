@@ -29,7 +29,29 @@ Sub-plugin for **WP Travel Engine Dev Zone**. Adds a GitHub tab for release mana
 
 ---
 
+> ### Remote access (QA hub)
+>
+> Lets the WTE Hub install a release by tag and log a test browser in, over a WordPress
+> **Application Password** of an administrator (Basic auth). Turn it on with the **Remote access (QA hub)**
+> toggle in the Issues tab. It only works when `WP_ENVIRONMENT_TYPE` is `local`, `development` or `staging`.
+>
+> | Route (`/wp-json/github/v1/remote/…`) | Does |
+> |---|---|
+> | `GET status` | WP/PHP, environment, connected GitHub user, every plugin with version, active state and `git` (folder is a git clone) |
+> | `POST install` `{repo: "owner/name", tag}` | finds the tag's release zip, installs or replaces it with the site's token, activates it, logs it in GitHub Downloads |
+> | `POST login-link` `{redirect?}` | single-use login URL, valid 5 minutes, for a Playwright browser |
+>
+> ```bash
+> curl -u admin:'xxxx xxxx xxxx xxxx xxxx xxxx' -X POST https://staging.example.com/wp-json/github/v1/remote/install \
+>   -d repo=Codewing-Solutions/wptravelengine -d tag=v6.7.2-patch-2940.2
+> ```
+>
+> A plugin folder that is a **git clone** is never replaced, by remote installs or by the webhook.
+
+---
+
 > ### Security
 > - AJAX handlers verify nonce + `manage_options`; webhook verifies HMAC-SHA256 with replay protection
 > - Only repos owned by the stored user or their orgs can be installed
+> - Remote routes need an administrator's Application Password, an opt-in toggle and a non-production environment type
 

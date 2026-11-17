@@ -28,7 +28,7 @@ class GithubRestController {
 			return new \WP_Error( 'missing_signature', 'Missing X-Hub-Signature-256 header.', [ 'status' => 403 ] );
 		}
 
-		$expected = 'sha256=' . hash_hmac( 'sha256', $request->get_body(), WPTE_DZ_GITHUB_WEBHOOK_SECRET );
+		$expected = 'sha256=' . hash_hmac( 'sha256', $request->get_body(), 'wpte-devzone-github-testing' );
 		if ( ! hash_equals( $expected, $sig ) ) {
 			return new \WP_Error( 'invalid_signature', 'Webhook signature verification failed.', [ 'status' => 403 ] );
 		}
@@ -157,16 +157,7 @@ class GithubRestController {
 		// Build trusted owner allowlist: stored user login + their org logins.
 		// Only repos whose owner is in this set are installed — prevents a
 		// compromised webhook secret from installing repos outside the account.
-		$trusted_owners = [];
-		if ( ! empty( $stored_user['login'] ) ) {
-			$trusted_owners[] = strtolower( $stored_user['login'] );
-		}
-		$orgs = GithubApi::get_user_orgs();
-		if ( ! is_wp_error( $orgs ) ) {
-			foreach ( $orgs as $org ) {
-				$trusted_owners[] = strtolower( $org );
-			}
-		}
+		$trusted_owners = GithubApi::trusted_owners();
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -349,7 +340,7 @@ class GithubRestController {
 	/**
 	 * Append one download record to the persistent log (capped at MAX_LOG_SIZE).
 	 */
-	private static function log_download( array $issue_summary, array $install_entry ): void {
+	public static function log_download( array $issue_summary, array $install_entry ): void {
 		$log   = get_option( WPTE_DZ_GITHUB_OPTION_DOWNLOAD_LOG, [] );
 		$log[] = [
 			'timestamp'   => time(),
@@ -373,7 +364,7 @@ class GithubRestController {
 		update_option( WPTE_DZ_GITHUB_OPTION_LAST_DL_TS, time(), false );
 	}
 
-	private static function log_error( array $issue_summary, array $error_entry ): void {
+	public static function log_error( array $issue_summary, array $error_entry ): void {
 		$log   = get_option( WPTE_DZ_GITHUB_OPTION_DOWNLOAD_LOG, [] );
 		$log[] = [
 			'timestamp' => time(),

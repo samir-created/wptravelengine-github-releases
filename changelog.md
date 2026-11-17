@@ -1,3 +1,10 @@
+## 1.2.0
+> Remote access (QA hub): opt-in toggle in the Issues tab; adds `github/v1/remote/status`, `remote/install` (repo + tag) and `remote/login-link` routes, authenticated with an administrator's Application Password, and only on local, development or staging sites
+>
+> Installer never replaces a plugin folder that is a git clone — protects local clones from webhook and remote installs
+>
+> Trusted-owner allowlist shared by webhook and remote installs (`GithubApi::trusted_owners()`)
+>
 
 ## 1.1.0
 > Repos/Favs/Issues sub-tab order fixed, Repos is now the default tab on load
