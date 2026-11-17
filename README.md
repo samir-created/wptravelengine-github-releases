@@ -33,7 +33,7 @@ Sub-plugin for **WP Travel Engine Dev Zone**. Adds a GitHub tab for release mana
 >
 > Lets the WTE Hub install a release by tag and log a test browser in, over a WordPress
 > **Application Password** of an administrator (Basic auth). Turn it on with the **Remote access (QA hub)**
-> toggle in the Issues tab. It only works when `WP_ENVIRONMENT_TYPE` is `local`, `development` or `staging`.
+> toggle in the Issues tab. It only works when `WP_ENVIRONMENT_TYPE` is `local`, `development`, `staging` or `non-production`.
 >
 > | Route (`/wp-json/github/v1/remote/…`) | Does |
 > |---|---|
