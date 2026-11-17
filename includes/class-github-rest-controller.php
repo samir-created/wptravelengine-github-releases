@@ -28,7 +28,7 @@ class GithubRestController {
 			return new \WP_Error( 'missing_signature', 'Missing X-Hub-Signature-256 header.', [ 'status' => 403 ] );
 		}
 
-		$expected = 'sha256=' . hash_hmac( 'sha256', $request->get_body(), WPTE_DZ_GITHUB_WEBHOOK_SECRET );
+		$expected = 'sha256=' . hash_hmac( 'sha256', $request->get_body(), 'wpte-devzone-github-testing' );
 		if ( ! hash_equals( $expected, $sig ) ) {
 			return new \WP_Error( 'invalid_signature', 'Webhook signature verification failed.', [ 'status' => 403 ] );
 		}

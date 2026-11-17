@@ -12,8 +12,3 @@ define( 'WPTE_DZ_GITHUB_OPTION_AUTO_INSTALL', 'wpte_dz_github_auto_install' );
 define( 'WPTE_DZ_GITHUB_OPTION_FAVORITES',    'wpte_dz_github_favorites' );
 define( 'WPTE_DZ_GITHUB_OPTION_LAST_INSTALLED', 'wpte_dz_github_last_installed' );
 define( 'WPTE_DZ_GITHUB_OPTION_REMOTE',       'wpte_dz_github_remote' );
-
-// Override in wp-config.php for a custom secret; default is the static testing value.
-if ( ! defined( 'WPTE_DZ_GITHUB_WEBHOOK_SECRET' ) ) {
-	define( 'WPTE_DZ_GITHUB_WEBHOOK_SECRET', 'wpte-devzone-github-testing' );
-}

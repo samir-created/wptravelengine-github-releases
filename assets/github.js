@@ -31,10 +31,11 @@ const issuePrCache    = {};   // "owner/repo#number" → prs[]
 const branchTagCache  = {};   // "owner/repo#branch"  → string[]
 // ---- HTML escape helper (XSS protection) ----
 // All untrusted strings MUST pass through esc() before DOM insertion.
+// Also escapes quotes: the result goes into quoted attributes too, and git allows " and ' in branch and tag names.
 function esc( str ) {
 	const d = document.createElement( 'div' );
 	d.textContent = String( str || '' );
-	return d.innerHTML;
+	return d.innerHTML.replace( /"/g, '&quot;' ).replace( /'/g, '&#39;' );
 }
 
 // ---- Favourites (persisted server-side in a single option) ----
